@@ -1,3 +1,6 @@
-/mysql/*
 /.idea
 **/.DS_Store
+/pgdata
+/mydata
+/.vscode
+/.env
