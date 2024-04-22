@@ -1,0 +1,82 @@
+version: "3"
+
+networks:
+    php:
+
+services:
+    app:
+        # platform: linux/amd64
+        platform: linux/arm64
+        build:
+            context: .
+            dockerfile: ./dockerfiles/frankenphp.dockerfile
+            args:
+                - UID=${CONTAINER_UID:-1000}
+                - GID=${CONTAINER_GID:-1000}
+                - USER=${CONTAINER_USER:-php}
+        env_file:
+            - ./.env
+        restart: always
+        entrypoint: sh -c "
+            if [ ! -d "./vendor" ]; then composer install; fi;
+            php artisan key:generate;
+            php artisan migrate;
+            php artisan migrate:auto;
+            php artisan storage:link --force;
+            supervisord -c /etc/supervisor/conf.d/supervisord.frankenphp.conf;
+            "
+        ports:
+            - "80:8000"
+        volumes:
+            - ./src:/app
+            - ./dockerfiles/supervisor/supervisord.frankenphp.conf:/etc/supervisor/conf.d/supervisord.frankenphp.conf
+        depends_on:
+            - my
+        networks:
+            - php
+
+    my:
+        # platform: linux/amd64
+        platform: linux/arm64
+        image: mysql:latest
+        restart: always
+        ports:
+            - "3306:3306"
+        environment:
+            MYSQL_DATABASE: app
+            MYSQL_USER: app
+            MYSQL_PASSWORD: 123456
+            MYSQL_ROOT_PASSWORD: 123456
+        volumes:
+            - ./mydata:/var/lib/mysql
+        networks:
+            - php
+
+    myadmin:
+        image: phpmyadmin:latest
+        restart: always
+        ports:
+            - 8080:80
+        environment:
+            PMA_ARBITRARY: 1
+            PMA_HOST: my
+            PMA_USER: app
+            PMA_PASSWORD: 123456
+        networks:
+            - php
+
+    #  redis:
+    #    image: redis:alpine
+    #    restart: unless-stopped
+    #    ports:
+    #      - "6379:6379"
+    #    networks:
+    #      - php
+
+    #  mailhog:
+    #    image: mailhog/mailhog:latest
+    #    ports:
+    #      - "1025:1025"
+    #      - "8025:8025"
+    #    networks:
+    #      - php
