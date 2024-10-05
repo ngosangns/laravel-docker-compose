@@ -21,7 +21,6 @@ services:
             if [ ! -d "./vendor" ]; then composer install; fi;
             php artisan key:generate;
             php artisan migrate;
-            php artisan migrate:auto;
             php artisan storage:link --force;
             supervisord -c /etc/supervisor/conf.d/supervisord.frankenphp.conf;
             "
@@ -30,8 +29,6 @@ services:
         volumes:
             - ./src:/app
             - ./dockerfiles/supervisor/supervisord.frankenphp.conf:/etc/supervisor/conf.d/supervisord.frankenphp.conf
-        depends_on:
-            - my
         networks:
             - php
 

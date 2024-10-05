@@ -1,12 +1,17 @@
+## Requirements
+
+-   Install Octane for the Laravel source: `composer require laravel/octane`
+
 ## Usage
 
 ```sh
 cp .env.example .env
 cp ./src/.env.example ./src/.env
 
-# Get UID and GID to update ./.env values
+# Get UID and GID CONTAINER_USER to update ./.env values
 id -u
 id -g
+whoami
 
 # Update ./src/.env values
 
